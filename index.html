@@ -1,0 +1,274 @@
+<!-- FILE: index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Registration Page</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --glass: rgba(255,255,255,0.06);
+      --accent: #00c6ff;
+      --accent-2: #7b61ff;
+      --neon: rgba(0,198,255,0.18);
+      --card-w: 720px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      color: #e6f7ff;
+      background: radial-gradient(1200px 700px at 10% 10%, rgba(123,97,255,0.12), transparent 6%),
+                  radial-gradient(900px 600px at 90% 90%, rgba(0,198,255,0.06), transparent 8%),
+                  linear-gradient(135deg, #041025 0%, #07102a 50%, #020817 100%);
+      overflow-x: hidden;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;align-items:center;justify-content:center;padding:40px;
+    }
+
+    /* animated background shapes */
+    .scene {
+      position:absolute;inset:0;pointer-events:none;z-index:0;
+    }
+    .orb {
+      position:absolute;border-radius:50%;filter:blur(40px);opacity:0.9;mix-blend-mode:screen;
+      animation: float 12s ease-in-out infinite;
+    }
+    .orb.o1{width:360px;height:360px;left:-120px;top:10%;background:linear-gradient(135deg,#00c6ff,#7b61ff);animation-duration:18s}
+    .orb.o2{width:240px;height:240px;right:-80px;bottom:5%;background:linear-gradient(135deg,#ff6b6b,#ffd36b);animation-duration:16s}
+    .orb.o3{width:120px;height:120px;left:50%;top:5%;background:linear-gradient(135deg,#60ffb8,#60e0ff);animation-duration:20s}
+    @keyframes float{0%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.03)}100%{transform:translateY(0) scale(1)}}
+
+    /* container */
+    .card {
+      position:relative;z-index:5;display:grid;grid-template-columns:1fr 420px;gap:28px;align-items:stretch;
+      width:min(100%, calc(var(--card-w) + 40px));max-width:1100px;padding:28px;border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      box-shadow: 0 10px 40px rgba(2,6,23,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
+      border: 1px solid rgba(0,198,255,0.06);
+      overflow:hidden;backdrop-filter: blur(10px);
+      transition:transform .4s cubic-bezier(.2,.9,.2,1);
+    }
+    .card:hover{transform:translateY(-6px)}
+
+    /* left panel - hero with graphics */
+    .hero{
+      padding:28px;border-radius:12px;position:relative;overflow:hidden;min-height:360px;
+      background:linear-gradient(180deg, rgba(7,16,40,0.7), rgba(6,12,24,0.5));border-right:1px solid rgba(255,255,255,0.02);
+    }
+    .hero h1{font-size:1.6rem;margin:0 0 8px;line-height:1.05;font-weight:800;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .hero p{margin:0 0 18px;color:#bfefff;font-weight:500}
+
+    /* animated tech grid */
+    .tech-grid{position:absolute;inset:0;opacity:0.15;background-image:linear-gradient(0deg,rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);background-size:34px 34px;animation: gridShift 26s linear infinite;}
+    @keyframes gridShift{from{background-position:0 0}to{background-position:34px 34px}}
+
+    /* animated svg circuit */
+    .circuit {position:absolute;right:-40px;bottom:-40px;opacity:0.14;transform:rotate(-10deg);}
+
+    .features{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+    .chip{background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);font-weight:600}
+
+    /* right panel - form */
+    .form-wrap{padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px}
+    .form-wrap h2{margin:0 0 6px;font-size:1.1rem;font-weight:800;background:linear-gradient(90deg,var(--accent-2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .form-desc{font-size:0.87rem;color:#bfefff;margin-bottom:14px}
+
+    label{display:block;font-size:0.86rem;margin:10px 0 6px;color:#cfefff}
+    input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:rgba(0,0,0,0.45);color:#eafcff;font-size:0.95rem;outline:none}
+    input::placeholder{color:#9fbfd0}
+    input:focus,select:focus,textarea:focus{box-shadow:0 6px 30px var(--neon);border-color:var(--accent)}
+
+    .row{display:flex;gap:12px}
+    .row .col{flex:1}
+
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;border-radius:10px;border:none;font-weight:700;text-transform:uppercase;cursor:pointer;
+      background:linear-gradient(90deg,#7b61ff,#00c6ff);background-size:200% 200%;animation:btnShift 6s linear infinite;color:#00101a
+    }
+    @keyframes btnShift{0%{background-position:0%}50%{background-position:100%}100%{background-position:0%}}
+
+    .success{display:none;padding:18px;text-align:center}
+
+    /* responsive */
+    @media (max-width:900px){
+      .card{grid-template-columns:1fr;}
+      .hero{order:2}
+    }
+    @media (max-width:520px){
+      body{padding:18px}
+      .card{gap:18px;padding:18px}
+    }
+  </style>
+</head>
+<body>
+  <div class="scene" aria-hidden="true">
+    <div class="orb o1"></div>
+    <div class="orb o2"></div>
+    <div class="orb o3"></div>
+  </div>
+
+  <main class="card" role="main">
+    <section class="hero" aria-hidden="false">
+      <div class="tech-grid"></div>
+
+      <svg class="circuit" width="420" height="420" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#00c6ff"/><stop offset="1" stop-color="#7b61ff"/></linearGradient>
+        </defs>
+        <rect x="10" y="10" width="400" height="400" rx="32" stroke="url(#g1)" stroke-opacity="0.06"/>
+        <g stroke="url(#g1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M60 200h90v-40h40v140h-40v-60H60v-40z" opacity="0.9"/>
+          <circle cx="300" cy="120" r="12" opacity="0.9"/>
+          <path d="M300 132v120h-30"/>
+        </g>
+      </svg>
+
+      <h1>Online Registration Page</h1>
+      <p>Register once — join the session — get resources and recording. Designed for developers, engineers and data enthusiasts.</p>
+
+      <div class="features">
+        <div class="chip">Live Q&A</div>
+        <div class="chip">Certificate</div>
+        <div class="chip">Recording</div>
+        <div class="chip">Slides</div>
+      </div>
+    </section>
+
+    <aside class="form-wrap" aria-label="Registration form">
+      <h2>Register for the session</h2>
+      <p class="form-desc">Fill in your details to reserve a seat. We’ll email the confirmation and resources.</p>
+
+      <form id="registration-form">
+        <label for="name">Full name</label>
+        <input id="name" name="name" type="text" placeholder="Jane Doe" required>
+
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" placeholder="you@domain.com" required>
+
+        <div class="row">
+          <div class="col">
+            <label for="phone">Phone</label>
+            <input id="phone" name="phone" type="tel" placeholder="9876543210" pattern="[0-9]{10}">
+          </div>
+          <div class="col">
+            <label for="topic">Topic</label>
+            <select id="topic" name="topic" required>
+              <option value="">-- Select a topic --</option>
+              <option value="AI">Artificial Intelligence</option>
+              <option value="Data Science">Data Science</option>
+              <option value="Web Dev">Web Development</option>
+              <option value="Cloud">Cloud Computing</option>
+              <option value="Cyber">Cyber Security</option>
+            </select>
+          </div>
+        </div>
+
+        <label for="notes">Short note (optional)</label>
+        <textarea id="notes" name="notes" rows="3" placeholder="Anything you want the host to know..." style="resize:vertical"></textarea>
+
+        <div style="display:flex;gap:12px;margin-top:12px;align-items:center">
+          <button id="submit-btn" class="btn" type="submit">Reserve Seat</button>
+          <div id="spinner" style="display:none">Submitting...</div>
+        </div>
+      </form>
+
+      <!-- Success greeting screen -->
+      <div id="success" class="success">
+        <h1 style="margin:0;color:var(--accent)">🎉 Thank You!</h1>
+        <p id="greet-text" style="margin:10px 0 0;color:#bfefff;font-size:1rem;"></p>
+        <div style="margin-top:18px;">
+          <button onclick="location.reload()" class="btn">Register Another</button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const scriptURL = 'http://localhost:3000/register';
+    const form = document.getElementById('registration-form');
+    const btn = document.getElementById('submit-btn');
+    const spinner = document.getElementById('spinner');
+    const success = document.getElementById('success');
+    const greetText = document.getElementById('greet-text');
+    const card = document.querySelector('.card');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = form.name.value.trim();
+      const email = form.email.value.trim();
+      const topic = form.topic.value;
+      if(!name || !email || !topic){
+        alert('Please fill name, email and topic.');
+        return;
+      }
+
+      btn.disabled = true; spinner.style.display = 'inline-block'; btn.style.opacity = 0.75;
+
+      const data = {
+        name, email, phone: form.phone.value.trim(), topic, notes: form.notes.value.trim(), submittedAt: new Date().toISOString()
+      };
+
+      try{
+        const res = await fetch(scriptURL, {
+          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+        });
+        if(res.ok){
+          form.reset();
+          form.style.display = "none";
+          success.style.display = "block";
+          greetText.innerHTML = `Hi <strong>${name}</strong>, you’re registered for <strong>${topic}</strong>.<br>
+            We’ve saved your details. Check your email for confirmation.`;
+          launchConfetti();
+        } else {
+          const errText = await res.text();
+          alert('⚠️ ' + (errText || res.statusText || 'Submission failed'));
+        }
+      }catch(err){
+        console.error(err);
+        alert('⚠️ Problem submitting form — check console for details');
+      }finally{
+        btn.disabled = false; spinner.style.display = 'none'; btn.style.opacity = 1;
+      }
+    });
+
+    // Confetti animation
+    function launchConfetti() {
+      const duration = 2000;
+      const end = Date.now() + duration;
+
+      (function frame() {
+        const colors = ['#00c6ff', '#7b61ff', '#ffd36b', '#60ffb8', '#ff6b6b'];
+        const confetti = document.createElement("div");
+        confetti.style.position = "fixed";
+        confetti.style.width = "10px";
+        confetti.style.height = "10px";
+        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.top = "-10px";
+        confetti.style.left = Math.random() * window.innerWidth + "px";
+        confetti.style.opacity = 0.9;
+        confetti.style.transform = `rotate(${Math.random()*360}deg)`;
+        document.body.appendChild(confetti);
+
+        let fall = setInterval(() => {
+          let top = parseInt(confetti.style.top);
+          confetti.style.top = top + 4 + "px";
+          if (top > window.innerHeight) {
+            clearInterval(fall);
+            confetti.remove();
+          }
+        }, 16);
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      })();
+    }
+  </script>
+</body>
+</html>
