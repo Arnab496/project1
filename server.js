@@ -1,63 +1,48 @@
-// server.js
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const xlsx = require('xlsx');
-const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
-const PORT = 3000;
 
-// Middleware
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname))); // serve index.html and assets
+// Middlewares
+app.use(cors());
+app.use(express.json());
 
-// Excel file path
-const filePath = path.join(__dirname, 'submission.xlsx');
+// MongoDB connect
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.log("❌ DB Connection Error:", err));
 
-// Helper function to save data
-function saveToExcel(data) {
-  let workbook;
-  let worksheet;
+// Schema & Model
+const RegistrationSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  phone: String,
+  topic: String,
+  notes: String,
+  submittedAt: Date
+});
 
-  // Check if file exists
-  if (fs.existsSync(filePath)) {
-    workbook = xlsx.readFile(filePath);
-    worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const existingData = xlsx.utils.sheet_to_json(worksheet);
-    existingData.push(data);
-    worksheet = xlsx.utils.json_to_sheet(existingData);
-    workbook.Sheets[workbook.SheetNames[0]] = worksheet;
-  } else {
-    // Create new workbook
-    workbook = xlsx.utils.book_new();
-    worksheet = xlsx.utils.json_to_sheet([data]);
-    xlsx.utils.book_append_sheet(workbook, worksheet, 'Submissions');
-  }
+const Registration = mongoose.model("Registration", RegistrationSchema);
 
-  xlsx.writeFile(workbook, filePath);
-}
+// Routes
+app.get("/", (req, res) => {
+  res.send("Registration API Running");
+});
 
-// POST endpoint
-app.post('/register', (req, res) => {
+app.post("/register", async (req, res) => {
   try {
-    const { name, email, phone, topic, notes, submittedAt } = req.body;
-
-    if (!name || !email || !topic) {
-      return res.status(400).send('Name, email, and topic are required');
-    }
-
-    const entry = { Name: name, Email: email, Phone: phone, Topic: topic, Notes: notes, SubmittedAt: submittedAt };
-    saveToExcel(entry);
-
-    res.status(200).send('Successfully submitted');
+    const newEntry = new Registration(req.body);
+    await newEntry.save();
+    res.json({ message: "Data saved!" });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
+    console.log(err);
+    res.status(500).json({ error: "Something went wrong" });
   }
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));

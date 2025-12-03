@@ -61,7 +61,17 @@
       padding:28px;border-radius:12px;position:relative;overflow:hidden;min-height:360px;
       background:linear-gradient(180deg, rgba(7,16,40,0.7), rgba(6,12,24,0.5));border-right:1px solid rgba(255,255,255,0.02);
     }
-    .hero h1{font-size:1.6rem;margin:0 0 8px;line-height:1.05;font-weight:800;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .hero h1 {
+  font-size:1.6rem;
+  margin:0 0 8px;
+  line-height:1.05;
+  font-weight:800;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  background-clip: text;           /* add this */
+  -webkit-background-clip: text;   /* you already had this */
+  -webkit-text-fill-color: transparent;
+    }
+
     .hero p{margin:0 0 18px;color:#bfefff;font-weight:500}
 
     /* animated tech grid */
@@ -76,9 +86,15 @@
 
     /* right panel - form */
     .form-wrap{padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px}
-    .form-wrap h2{margin:0 0 6px;font-size:1.1rem;font-weight:800;background:linear-gradient(90deg,var(--accent-2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .form-desc{font-size:0.87rem;color:#bfefff;margin-bottom:14px}
-
+    .form-wrap h2 {
+    margin:0 0 6px;
+    font-size:1.1rem;
+   font-weight:800;
+    background:linear-gradient(90deg,var(--accent-2),var(--accent));
+    background-clip: text;           /* add this */
+    -webkit-background-clip: text;   /* existing */
+    -webkit-text-fill-color: transparent;
+  } 
     label{display:block;font-size:0.86rem;margin:10px 0 6px;color:#cfefff}
     input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:rgba(0,0,0,0.45);color:#eafcff;font-size:0.95rem;outline:none}
     input::placeholder{color:#9fbfd0}
