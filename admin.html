@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin – View Registrations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui;
+      background: #020617;
+      color: #e6f7ff;
+      padding: 30px;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #00c6ff, #7b61ff);
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    input, select {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: none;
+      background: #0a0f2b;
+      color: #d7ecff;
+      font-size: 0.9rem;
+    }
+
+    button {
+      padding: 10px 16px;
+      background: linear-gradient(90deg, #7b61ff, #00c6ff);
+      border: none;
+      color: #00101a;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      background: #020818;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    th {
+      background: #0b122e;
+      text-align: left;
+      font-weight: 700;
+    }
+
+    tr:nth-child(even) td {
+      background: #0b1127;
+    }
+
+    .tag {
+      padding: 3px 10px;
+      background: #0f172b;
+      border-radius: 999px;
+      font-size: 0.75rem;
+    }
+
+    #status {
+      margin-top: 12px;
+      color: #94a3b8;
+    }
+
+    #chartBox {
+      width: 360px;
+      max-width: 100%;
+      margin: 20px 0;
+      padding: 20px;
+      background: #0b1127;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Registered Users – Admin Panel</h1>
+
+  <!-- Pie Chart -->
+  <div id="chartBox">
+    <h3 style="margin-top:0">Topic Interest Chart</h3>
+    <canvas id="pieChart"></canvas>
+  </div>
+
+  <!-- Filters + Search -->
+  <div class="controls">
+    <input type="text" id="search" placeholder="Search name, email, phone..." />
+    <select id="topicFilter">
+      <option value="">Filter by Topic</option>
+      <option value="AI">Artificial Intelligence</option>
+      <option value="Data Science">Data Science</option>
+      <option value="Web Dev">Web Development</option>
+      <option value="Cloud">Cloud Computing</option>
+      <option value="Cyber">Cyber Security</option>
+    </select>
+    <button onclick="downloadCSV()">Download CSV</button>
+    <button onclick="loadData()">Refresh</button>
+  </div>
+
+  <p id="status">Loading registrations…</p>
+
+  <table id="reg-table" style="display:none">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Topic</th>
+        <th>Notes</th>
+        <th>Submitted At</th>
+      </tr>
+    </thead>
+    <tbody id="reg-body"></tbody>
+  </table>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    const API_URL = "https://registration-backend-5ngv.onrender.com/registrations";
+    let allData = [];
+    let pieChart;
+
+    async function loadData() {
+      const status = document.getElementById("status");
+      const table = document.getElementById("reg-table");
+      const tbody = document.getElementById("reg-body");
+
+      status.textContent = "Loading registrations…";
+      table.style.display = "none";
+      tbody.innerHTML = "";
+
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        allData = data;
+
+        if (!data.length) {
+          status.textContent = "No registrations yet.";
+          return;
+        }
+
+        // Update chart
+        loadChart();
+
+        // Fill table
+        renderTable(data);
+
+        status.style.display = "none";
+        table.style.display = "table";
+
+      } catch (err) {
+        console.error(err);
+        status.textContent = "Error loading registrations.";
+      }
+    }
+
+    // Render table
+    function renderTable(data) {
+      const tbody = document.getElementById("reg-body");
+      tbody.innerHTML = "";
+
+      data.forEach((reg, i) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${reg.name}</td>
+          <td>${reg.email}</td>
+          <td>${reg.phone || ""}</td>
+          <td><span class="tag">${reg.topic}</span></td>
+          <td>${reg.notes || ""}</td>
+          <td>${new Date(reg.submittedAt).toLocaleString()}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Search + Filter
+    document.getElementById("search").addEventListener("input", filterData);
+    document.getElementById("topicFilter").addEventListener("change", filterData);
+
+    function filterData() {
+      const search = document.getElementById("search").value.toLowerCase();
+      const topic = document.getElementById("topicFilter").value;
+
+      let filtered = allData.filter(r =>
+        (r.name + r.email + r.phone + r.notes).toLowerCase().includes(search)
+      );
+
+      if (topic) filtered = filtered.filter(r => r.topic === topic);
+
+      renderTable(filtered);
+    }
+
+    // PIE CHART
+    function loadChart() {
+      const topicCounts = {
+        "AI": 0,
+        "Data Science": 0,
+        "Web Dev": 0,
+        "Cloud": 0,
+        "Cyber": 0
+      };
+
+      allData.forEach(r => {
+        if (topicCounts[r.topic] !== undefined) {
+          topicCounts[r.topic]++;
+        }
+      });
+
+      const labels = Object.keys(topicCounts);
+      const values = Object.values(topicCounts);
+
+      // remove old chart
+      if (pieChart) pieChart.destroy();
+
+      const ctx = document.getElementById("pieChart").getContext("2d");
+
+      pieChart = new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: [
+              "#00c6ff",
+              "#7b61ff",
+              "#ffd36b",
+              "#60ffb8",
+              "#ff6b6b"
+            ],
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              labels: { color: "#e6f7ff" }
+            }
+          }
+        }
+      });
+    }
+
+    // CSV Download
+    function downloadCSV() {
+      const rows = [
+        ["Name", "Email", "Phone", "Topic", "Notes", "Submitted At"],
+        ...allData.map(r => [
+          r.name,
+          r.email,
+          r.phone,
+          r.topic,
+          r.notes,
+          new Date(r.submittedAt).toLocaleString()
+        ])
+      ];
+
+      let csv = rows.map(e => e.join(",")).join("\n");
+      let blob = new Blob([csv], { type: "text/csv" });
+      let url = window.URL.createObjectURL(blob);
+
+      let a = document.createElement("a");
+      a.href = url;
+      a.download = "registrations.csv";
+      a.click();
+    }
+
+    loadData();
+  </script>
+
+</body>
+</html>
