@@ -1,79 +1,82 @@
-// ===== IMPORTS =====
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-require('dotenv').config();
+// server.js (FINAL VERSION)
+// --------------------------------------------
+// IMPORTS
+// --------------------------------------------
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+require("dotenv").config();
 
-// ===== APP SETUP =====
+// --------------------------------------------
+// EXPRESS SETUP
+// --------------------------------------------
 const app = express();
-app.use(cors());
 app.use(express.json());
 
-// ===== CONNECT TO MONGODB =====
+// ENABLE CORS FOR ALL FRONTENDS (GitHub Pages, Netlify, etc.)
+app.use(cors({ origin: "*", methods: ["GET", "POST"] }));
+
+// --------------------------------------------
+// MONGO CONNECTION
+// --------------------------------------------
+const MONGO_URI = process.env.MONGO_URI;
+
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.error("❌ DB Connection Error:", err));
+  .catch((err) => console.error("❌ MongoDB Connection Error:", err));
 
-// ===== SCHEMA =====
-const RegistrationSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
+// --------------------------------------------
+// SCHEMA + MODEL
+// --------------------------------------------
+const regSchema = new mongoose.Schema({
+  name: String,
+  email: String,
   phone: String,
-  topic: { type: String, required: true },
+  topic: String,
   notes: String,
-  submittedAt: { type: Date, default: Date.now }
+  submittedAt: String,
 });
 
-const Registration = mongoose.model("Registration", RegistrationSchema);
+const Registration = mongoose.model("Registration", regSchema);
 
-// ===== ROUTES =====
+// --------------------------------------------
+// ROUTES
+// --------------------------------------------
 
-// Home route
+// Test route – to check if backend is running
 app.get("/", (req, res) => {
-  res.send("Registration API Running");
+  res.send("Backend API Running ✔");
 });
 
-// POST — save registration
+// POST /register — save registration
 app.post("/register", async (req, res) => {
   try {
-    const { name, email, phone, topic, notes, submittedAt } = req.body;
-
-    if (!name || !email || !topic) {
-      return res.status(400).json({ error: "Name, email and topic are required." });
-    }
-
-    const registration = new Registration({
-      name,
-      email,
-      phone,
-      topic,
-      notes,
-      submittedAt: submittedAt ? new Date(submittedAt) : new Date()
-    });
-
-    await registration.save();
-    res.status(201).json({ message: "Registration saved successfully" });
+    const data = new Registration(req.body);
+    await data.save();
+    res.json({ success: true, message: "Registration Saved" });
   } catch (err) {
-    console.error("Error saving registration:", err);
-    res.status(500).json({ error: "Server error. Please try again later." });
+    console.error("❌ Error saving registration:", err);
+    res.status(500).json({ error: "Failed to save registration" });
   }
 });
 
-// GET — fetch all registrations (admin panel)
+// GET /registrations — list all registered people
 app.get("/registrations", async (req, res) => {
   try {
-    const data = await Registration.find().sort({ submittedAt: -1 });
-    res.json(data);
+    const list = await Registration.find().sort({ submittedAt: -1 });
+    res.json(list);
   } catch (err) {
-    console.error("Error fetching registrations:", err);
+    console.error("❌ Error fetching registrations:", err);
     res.status(500).json({ error: "Failed to fetch registrations" });
   }
 });
 
-// ===== START SERVER =====
+// --------------------------------------------
+// START SERVER
+// --------------------------------------------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
