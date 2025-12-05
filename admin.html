@@ -1,298 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin – View Registrations</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard – Registrations</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    :root {
+        --accent: #00c6ff;
+        --accent2: #7b61ff;
+        --glass: rgba(255,255,255,0.07);
+        --border: rgba(255,255,255,0.08);
+        --shadow: rgba(0,0,0,0.5);
+    }
+
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
     body {
-      margin: 0;
-      font-family: "Inter", system-ui;
-      background: #020617;
-      color: #e6f7ff;
-      padding: 30px;
+        margin: 0;
+        background: linear-gradient(135deg, #02040f, #050b21, #0a1028);
+        color: #dff6ff;
+        overflow-x: hidden;
     }
 
-    h1 {
-      font-size: 1.9rem;
-      font-weight: 800;
-      background: linear-gradient(90deg, #00c6ff, #7b61ff);
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 20px;
+    /* Animated Background Orbs */
+    .orb {
+        position: fixed;
+        width: 400px; height: 400px;
+        background: radial-gradient(circle, var(--accent2), transparent 70%);
+        filter: blur(80px);
+        opacity: 0.5;
+        animation: float 12s infinite ease-in-out;
+        z-index: -1;
+    }
+    .orb2 {
+        background: radial-gradient(circle, var(--accent), transparent 70%);
+        animation-duration: 18s;
+    }
+    @keyframes float {
+        0% { transform: translate(0, 0); }
+        50% { transform: translate(60px, -40px); }
+        100% { transform: translate(0, 0); }
     }
 
-    .controls {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
+    /* Header */
+    header {
+        padding: 20px 40px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255,255,255,0.04);
+        backdrop-filter: blur(10px);
+        position: sticky; top: 0;
+    }
+    header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 800;
+        background: linear-gradient(90deg,var(--accent),var(--accent2));
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
     }
 
-    input, select {
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: none;
-      background: #0a0f2b;
-      color: #d7ecff;
-      font-size: 0.9rem;
+    /* Dashboard Grid */
+    .container {
+        padding: 30px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
     }
 
-    button {
-      padding: 10px 16px;
-      background: linear-gradient(90deg, #7b61ff, #00c6ff);
-      border: none;
-      color: #00101a;
-      font-weight: 700;
-      border-radius: 8px;
-      cursor: pointer;
+    .card {
+        padding: 20px;
+        background: var(--glass);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: 0 8px 25px var(--shadow);
+        backdrop-filter: blur(14px);
+        animation: fadeIn 0.8s ease forwards;
     }
 
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px);}
+        to { opacity: 1; transform: translateY(0);}
+    }
+
+    /* Table */
     table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 16px;
-      font-size: 0.9rem;
-      background: #020818;
-      border-radius: 10px;
-      overflow: hidden;
+        width: 100%;
+        margin-top: 10px;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: 10px;
     }
-
     th, td {
-      padding: 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+        padding: 12px;
+        border-bottom: 1px solid var(--border);
     }
-
     th {
-      background: #0b122e;
-      text-align: left;
-      font-weight: 700;
+        background: rgba(255,255,255,0.08);
+        text-align: left;
+        font-weight: 700;
+    }
+    tr:hover {
+        background: rgba(123,97,255,0.1);
+        transition: 0.2s;
     }
 
-    tr:nth-child(even) td {
-      background: #0b1127;
+    /* Loading */
+    .loading {
+        text-align: center;
+        padding: 20px;
+        font-size: 1.1rem;
+        opacity: 0.7;
     }
-
-    .tag {
-      padding: 3px 10px;
-      background: #0f172b;
-      border-radius: 999px;
-      font-size: 0.75rem;
-    }
-
-    #status {
-      margin-top: 12px;
-      color: #94a3b8;
-    }
-
-    #chartBox {
-      width: 360px;
-      max-width: 100%;
-      margin: 20px 0;
-      padding: 20px;
-      background: #0b1127;
-      border-radius: 10px;
-    }
-  </style>
+</style>
 </head>
-
 <body>
 
-  <h1>Registered Users – Admin Panel</h1>
+<!-- Floating Orbs -->
+<div class="orb" style="top: -80px; left: -80px;"></div>
+<div class="orb orb2" style="bottom: -60px; right: -60px;"></div>
 
-  <!-- Pie Chart -->
-  <div id="chartBox">
-    <h3 style="margin-top:0">Topic Interest Chart</h3>
-    <canvas id="pieChart"></canvas>
-  </div>
+<header>
+    <h1>Admin Dashboard – Registrations</h1>
+</header>
 
-  <!-- Filters + Search -->
-  <div class="controls">
-    <input type="text" id="search" placeholder="Search name, email, phone..." />
-    <select id="topicFilter">
-      <option value="">Filter by Topic</option>
-      <option value="AI">Artificial Intelligence</option>
-      <option value="Data Science">Data Science</option>
-      <option value="Web Dev">Web Development</option>
-      <option value="Cloud">Cloud Computing</option>
-      <option value="Cyber">Cyber Security</option>
-    </select>
-    <button onclick="downloadCSV()">Download CSV</button>
-    <button onclick="loadData()">Refresh</button>
-  </div>
+<div class="container">
 
-  <p id="status">Loading registrations…</p>
+    <!-- Chart Card -->
+    <div class="card">
+        <h2>Topic Interest Overview</h2>
+        <canvas id="pieChart" height="200"></canvas>
+    </div>
 
-  <table id="reg-table" style="display:none">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Topic</th>
-        <th>Notes</th>
-        <th>Submitted At</th>
-      </tr>
-    </thead>
-    <tbody id="reg-body"></tbody>
-  </table>
+    <div class="card">
+        <h2>Topic Count (Bar Chart)</h2>
+        <canvas id="barChart" height="200"></canvas>
+    </div>
 
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Registration Table -->
+    <div class="card" style="grid-column: span 2;">
+        <h2>All Registrations</h2>
+        <div id="loading" class="loading">Loading registrations...</div>
 
-  <script>
-    const API_URL = "https://registration-backend-5ngv.onrender.com/registrations";
-    let allData = [];
-    let pieChart;
+        <table id="regTable" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Topic</th>
+                    <th>Submitted At</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-    async function loadData() {
-      const status = document.getElementById("status");
-      const table = document.getElementById("reg-table");
-      const tbody = document.getElementById("reg-body");
+</div>
 
-      status.textContent = "Loading registrations…";
-      table.style.display = "none";
-      tbody.innerHTML = "";
+<script>
+const API_URL = "https://backend-3hvk.onrender.com/registrations";
 
-      try {
+async function loadData() {
+    try {
         const res = await fetch(API_URL);
         const data = await res.json();
-        allData = data;
 
-        if (!data.length) {
-          status.textContent = "No registrations yet.";
-          return;
+        if (!Array.isArray(data)) {
+            document.getElementById("loading").innerText = "Error loading data.";
+            return;
         }
 
-        // Update chart
-        loadChart();
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("regTable").style.display = "table";
 
-        // Fill table
-        renderTable(data);
+        const tbody = document.querySelector("#regTable tbody");
 
-        status.style.display = "none";
-        table.style.display = "table";
+        // Populate table
+        data.forEach(r => {
+            const row = `<tr>
+                <td>${r.name}</td>
+                <td>${r.email}</td>
+                <td>${r.phone || "-"}</td>
+                <td>${r.topic}</td>
+                <td>${new Date(r.submittedAt).toLocaleString()}</td>
+            </tr>`;
+            tbody.innerHTML += row;
+        });
 
-      } catch (err) {
+        // Topic count for charts
+        const topics = {};
+        data.forEach(r => {
+            topics[r.topic] = (topics[r.topic] || 0) + 1;
+        });
+
+        createCharts(topics);
+
+    } catch (err) {
         console.error(err);
-        status.textContent = "Error loading registrations.";
-      }
+        document.getElementById("loading").innerText = "Failed to load data.";
     }
+}
 
-    // Render table
-    function renderTable(data) {
-      const tbody = document.getElementById("reg-body");
-      tbody.innerHTML = "";
+function createCharts(topics) {
+    const labels = Object.keys(topics);
+    const counts = Object.values(topics);
 
-      data.forEach((reg, i) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${i + 1}</td>
-          <td>${reg.name}</td>
-          <td>${reg.email}</td>
-          <td>${reg.phone || ""}</td>
-          <td><span class="tag">${reg.topic}</span></td>
-          <td>${reg.notes || ""}</td>
-          <td>${new Date(reg.submittedAt).toLocaleString()}</td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
+    const colors = ["#00c6ff", "#7b61ff", "#ff6b6b", "#ffd36b", "#60ffb8"];
 
-    // Search + Filter
-    document.getElementById("search").addEventListener("input", filterData);
-    document.getElementById("topicFilter").addEventListener("change", filterData);
-
-    function filterData() {
-      const search = document.getElementById("search").value.toLowerCase();
-      const topic = document.getElementById("topicFilter").value;
-
-      let filtered = allData.filter(r =>
-        (r.name + r.email + r.phone + r.notes).toLowerCase().includes(search)
-      );
-
-      if (topic) filtered = filtered.filter(r => r.topic === topic);
-
-      renderTable(filtered);
-    }
-
-    // PIE CHART
-    function loadChart() {
-      const topicCounts = {
-        "AI": 0,
-        "Data Science": 0,
-        "Web Dev": 0,
-        "Cloud": 0,
-        "Cyber": 0
-      };
-
-      allData.forEach(r => {
-        if (topicCounts[r.topic] !== undefined) {
-          topicCounts[r.topic]++;
-        }
-      });
-
-      const labels = Object.keys(topicCounts);
-      const values = Object.values(topicCounts);
-
-      // remove old chart
-      if (pieChart) pieChart.destroy();
-
-      const ctx = document.getElementById("pieChart").getContext("2d");
-
-      pieChart = new Chart(ctx, {
+    // Pie Chart
+    new Chart(document.getElementById("pieChart"), {
         type: "pie",
         data: {
-          labels,
-          datasets: [{
-            data: values,
-            backgroundColor: [
-              "#00c6ff",
-              "#7b61ff",
-              "#ffd36b",
-              "#60ffb8",
-              "#ff6b6b"
-            ],
-          }]
+            labels,
+            datasets: [{ data: counts, backgroundColor: colors }]
+        }
+    });
+
+    // Bar Chart
+    new Chart(document.getElementById("barChart"), {
+        type: "bar",
+        data: {
+            labels,
+            datasets: [{
+                label: "Registrations",
+                data: counts,
+                backgroundColor: colors.map(c => c + "cc")
+            }]
         },
         options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              labels: { color: "#e6f7ff" }
-            }
-          }
+            scales: { y: { beginAtZero: true } }
         }
-      });
-    }
+    });
+}
 
-    // CSV Download
-    function downloadCSV() {
-      const rows = [
-        ["Name", "Email", "Phone", "Topic", "Notes", "Submitted At"],
-        ...allData.map(r => [
-          r.name,
-          r.email,
-          r.phone,
-          r.topic,
-          r.notes,
-          new Date(r.submittedAt).toLocaleString()
-        ])
-      ];
-
-      let csv = rows.map(e => e.join(",")).join("\n");
-      let blob = new Blob([csv], { type: "text/csv" });
-      let url = window.URL.createObjectURL(blob);
-
-      let a = document.createElement("a");
-      a.href = url;
-      a.download = "registrations.csv";
-      a.click();
-    }
-
-    loadData();
-  </script>
+loadData();
+</script>
 
 </body>
 </html>
