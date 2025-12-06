@@ -7,13 +7,22 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use(cors());
 
-// ---------- MONGO CONNECTION (NEW SYNTAX) ----------
+// ---------- FIXED CORS (IMPORTANT) ----------
+app.use(cors({
+  origin: [
+    "https://arnab496.github.io",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+  ],
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"]
+}));
+
+// ---------- MONGO CONNECTION ----------
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected Successfully"))
   .catch((err) => console.error("❌ MongoDB Connection Error:", err));
-
 
 // ---------- SCHEMA ----------
 const regSchema = new mongoose.Schema({
@@ -32,25 +41,21 @@ app.get("/", (req, res) => {
   res.send("Backend API Running ✔");
 });
 
-// Save registration
 app.post("/register", async (req, res) => {
   try {
     const newReg = new Registration(req.body);
     await newReg.save();
     res.json({ success: true, message: "Registration saved" });
   } catch (err) {
-    console.error("❌ Error saving registration:", err);
     res.status(500).json({ error: "Failed to save registration" });
   }
 });
 
-// Fetch all registrations (admin)
 app.get("/registrations", async (req, res) => {
   try {
     const allRegs = await Registration.find();
     res.json(allRegs);
   } catch (err) {
-    console.error("❌ Error fetching registrations:", err);
     res.status(500).json({ error: "Failed to fetch registrations" });
   }
 });
